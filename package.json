@@ -1,0 +1,11 @@
+{
+  "dependencies": {
+    "@vercel/node": "^3.0.6",
+    "node-fetch": "^3.3.2",
+    "typescript": "^5.2.2",
+    "vercel": "^32.5.0"
+  },
+  "scripts": {
+    "local": "vercel dev"
+  }
+}
