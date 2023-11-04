@@ -31,6 +31,7 @@ export default async function handler(request, response) {
     });
 
     response.setHeader('Cache-Control', 'max-age=2592000');
+    response.setHeader('Content-Type', 'image/svg+xml')
     return response.send(responseData);
   } catch (error) {
     return response.json(error);
