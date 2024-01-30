@@ -9,7 +9,7 @@ export default async function handler(request, response) {
 
   const options = {
     headers: {
-      'Referer': 'https://bilibili.com'
+      'Referer': 'https://www.bilibili.com'
     }
   };
 
