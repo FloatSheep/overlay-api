@@ -1,10 +1,10 @@
 import https from 'https';
 
 export default async function handler(request, response) {
-  const { fetch: fetchUrl } = request.query;
+  const { fetch: imageUrl } = request.query;
 
-  if (!fetchUrl) {
-    return response.status(400).json({ error: 'No fetch URL provided' });
+  if (!imageUrl) {
+    return response.status(400).json({ error: 'No image URL provided' });
   }
 
   const options = {
@@ -14,30 +14,18 @@ export default async function handler(request, response) {
   };
 
   try {
-    const responseData = await new Promise((resolve, reject) => {
-      https.get(fetchUrl, options, (res) => {
-        let data = '';
+    https.get(imageUrl, options, (res) => {
+      if (!res.statusCode || res.statusCode < 200 || res.statusCode >= 300) {
+        return response.status(res.statusCode).json({ error: 'Failed to fetch image' });
+      }
 
-        if (!/^2/.test('' + res.statusCode)) {
-          reject(new Error('Failed to fetch the URL'));
-        }
+      response.setHeader('Content-Type', res.headers['content-type']);
 
-        res.on('data', (chunk) => {
-          data += chunk;
-        });
-
-        res.on('end', () => {
-          resolve(data);
-        });
-      }).on('error', (error) => {
-        reject(error);
-      });
+      res.pipe(response);
+    }).on('error', (error) => {
+      response.status(500).json({ error: error.message });
     });
-
-    response.setHeader('Content-Type', 'text/plain');
-    response.send(responseData);
   } catch (error) {
-    response.statusCode = 500;
-    response.json({ error: error.message });
+    response.status(500).json({ error: error.message });
   }
 }
