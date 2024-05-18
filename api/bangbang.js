@@ -1,41 +1,60 @@
-import axios from "axios";
+import https from "https";
 
-export default async function handler(request, response) {
+export default function handler(request, response) {
   const owner = "Mxmilu666";
   const repo = "bangbang93HUB";
   const branch = "main";
   const token = process.env.GITHUB_TOKEN;
 
-  const headers = {
-    Authorization: `token ${token}`,
+  const options = {
+    hostname: "api.github.com",
+    path: `/repos/${owner}/${repo}/contents?ref=${branch}`,
+    method: "GET",
+    headers: {
+      Authorization: `token ${token}`,
+      "User-Agent": "Bangbang API",
+    },
   };
 
-  try {
-    // 获取仓库根目录的所有文件和目录
-    const repoContents = await axios.get(
-      `https://api.github.com/repos/${owner}/${repo}/contents?ref=${branch}`,
-      { headers }
-    );
+  let data = "";
 
-    // 筛选出图片文件
-    const imageFiles = repoContents.data.filter((file) =>
-      file.name.match(/\.(jpg|jpeg|png|gif)$/)
-    );
+  const req = https.request(options, (res) => {
+    res.on("data", (chunk) => {
+      data += chunk;
+    });
 
-    if (imageFiles.length === 0) {
-      return response
-        .status(404)
-        .json({ error: "No image files found in the repo's root directory." });
-    }
+    res.on("end", () => {
+      try {
+        const repoContents = JSON.parse(data);
+        const imageFiles = repoContents.filter((file) =>
+          file.name.match(/\.(jpg|jpeg|png|gif)$/)
+        );
 
-    // 从筛选结果中随机选择一张图片
-    const imageUrl =
-      imageFiles[Math.floor(Math.random() * imageFiles.length)].download_url;
+        if (imageFiles.length === 0) {
+          return response
+            .status(404)
+            .json({
+              error: "No image files found in the repo's root directory.",
+            });
+        }
 
-    // 返回选中图片的URL
-    return response.status(200).json({ imageUrl });
-  } catch (error) {
+        const imageUrl =
+          imageFiles[Math.floor(Math.random() * imageFiles.length)]
+            .download_url;
+
+        // 返回选中图片的URL
+        return response.status(200).json({ imageUrl });
+      } catch (error) {
+        console.error("Failed to parse GitHub response:", error);
+        return response.status(500).json({ error: "Internal server error." });
+      }
+    });
+  });
+
+  req.on("error", (error) => {
     console.error("Failed to retrieve images from GitHub:", error);
     return response.status(500).json({ error: "Internal server error." });
-  }
+  });
+
+  req.end();
 }
