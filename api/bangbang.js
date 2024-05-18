@@ -3,7 +3,7 @@ import axios from "axios";
 export default async function handler(request, response) {
   const owner = "Mxmilu666";
   const repo = "bangbang93HUB";
-  const branch = "main"; // 或者是你存储图片的特定分支
+  const branch = "main";
   const token = process.env.GITHUB_TOKEN;
 
   const headers = {
